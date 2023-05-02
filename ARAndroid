@@ -1,0 +1,109 @@
+class MainActivity : AppCompatActivity() {
+
+    private lateinit var arFragment: ArFragment
+    private lateinit var arSession: Session
+    private lateinit var poiNodes: ArrayList<Node> // список всех узлов точек интереса
+
+    override fun onCreate(savedInstanceState: Bundle?) {
+        super.onCreate(savedInstanceState)
+        setContentView(R.layout.activity_main)
+        
+        // Получаем ссылку на AR-фрагмент
+        arFragment = supportFragmentManager.findFragmentById(R.id.ar_fragment) as ArFragment
+        
+        // Регистрируем обработчик обновлений AR-сцены
+        arFragment.arSceneView.scene.addOnUpdateListener { frameTime ->
+            arSession = arFragment.arSceneView.session
+            onUpdate(frameTime)
+        }
+        
+        // Инициализируем список узлов точек интереса
+        poiNodes = ArrayList()
+    }
+
+    private fun onUpdate(frameTime: FrameTime) {
+        // TODO: написать код для обработки обновлений AR-сцены
+    }
+    
+    // Обработчик нажатия кнопки "Найти аудиторию"
+    fun onFindRoomClick(view: View) {
+        // Создаем новый узел точки интереса для аудитории
+        val roomNode = createPoiNode("Аудитория 101", "Это ваша аудитория", R.drawable.room_icon)
+        
+        // Добавляем узел точки интереса в AR-сцену
+        arFragment.arSceneView.scene.addChild(roomNode)
+        
+        // Добавляем узел точки интереса в список всех узлов точек интереса
+        poiNodes.add(roomNode)
+    }
+    
+    // Обработчик нажатия кнопки "Найти выход"
+    fun onFindExitClick(view: View) {
+        // Создаем новый узел точки интереса для выхода
+        val exitNode = createPoiNode("Выход", "Это выход", R.drawable.exit_icon)
+        
+        // Добавляем узел точки интереса в AR-сцену
+        arFragment.arSceneView.scene.addChild(exitNode)
+        
+        // Добавляем узел точки интереса в список всех узлов точек интереса
+        poiNodes.add(exitNode)
+    }
+    
+    // Обработчик нажатия кнопки "Найти туалет"
+    fun onFindToiletClick(view: View) {
+        // Создаем новый узел точки интереса для туалета
+        val toiletNode = createPoiNode("Туалет", "Это туалет", R.drawable.toilet_icon)
+        
+        // Добавляем узел точки интереса в AR-сцену
+        arFragment.arSceneView.scene.addChild(toiletNode)
+        
+        // Добавляем узел точки интереса в список всех узлов точек интереса
+        poiNodes.add(toiletNode)
+    }
+    
+    // Обработчик нажатия кнопки "Найти кафе"
+fun onFindCafeClick(view: View) {
+    // Создаем новый узел точки интереса для кафе
+    val cafeNode = createPoiNode("Кафе", "Это кафе")
+    
+    // Устанавливаем положение узла в пространстве
+    val cafeLocation = Location("")
+    cafeLocation.latitude = 55.753215
+    cafeLocation.longitude = 37.622504
+    cafeLocation.altitude = 0.0
+    cafeNode.worldPosition = LocationUtils.locationToWorldPosition(cafeLocation, arSession)
+
+    // Добавляем узел на AR-сцену
+    arFragment.arSceneView.scene.addChild(cafeNode)
+}
+
+// Функция для создания узла точки интереса с заданным названием и описанием
+private fun createPoiNode(title: String, description: String): Node {
+    // Создаем узел в виде 3D-модели шара
+    val sphere = Sphere(0.05f, 8, 8, true)
+    val sphereMaterial = Material()
+    sphereMaterial.setColor(Color(0.5f, 0.5f, 1.0f, 1.0f))
+    sphere.material = sphereMaterial
+    val sphereNode = Node()
+    sphereNode.renderable = ModelRenderable.builder().setSource(this, sphere).build().get()
+
+    // Создаем узел текста для отображения названия точки интереса
+    val text = TextRenderable.builder().setText(title).build()
+    text.isShadowCaster = false
+    text.isShadowReceiver = false
+    val textNode = Node()
+    textNode.setParent(sphereNode)
+    textNode.localPosition = Vector3(0.0f, 0.1f, 0.0f)
+    textNode.renderable = text
+
+    // Создаем узел текста для отображения описания точки интереса
+    val descriptionText = TextRenderable.builder().setText(description).build()
+    descriptionText.isShadowCaster = false
+    descriptionText.isShadowReceiver = false
+    val descriptionNode = Node()
+    descriptionNode.setParent(sphereNode)
+    descriptionNode.localPosition = Vector3(0.0f, -0.1f, 0.0f)
+    descriptionNode.renderable = descriptionText
+
+    return sphereNode
+}
